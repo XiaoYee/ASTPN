@@ -24,8 +24,8 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
     len_cam1 = len(image_cam1)
     len_cam2 = len(image_cam2)
     actualSampleSeqLen = sampleSeqLength
-    startA = int(random.random()* ((len_cam1 - actualSampleSeqLen) + 1)) + 1    
-    startB = int(random.random()* ((len_cam2 - actualSampleSeqLen) + 1)) + 1
+    startA = int(random.random()* ((len_cam1 - actualSampleSeqLen) + 1))   
+    startB = int(random.random()* ((len_cam2 - actualSampleSeqLen) + 1)) 
     # print startA,startB
     netInputA = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
     netInputB = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
@@ -63,7 +63,7 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
 	
     # trainID_random = random.shuffle(trainID)
     train_probe ,train_gallery = random.sample(range(150), 2)
-    print train_probe
+    # print train_probe
     train_probe = trainID[train_probe]
     train_gallery = trainID[train_gallery]
     image_cam1 = os.listdir(osp.join(person_sequence,"cam1",str(train_probe)))
@@ -77,8 +77,8 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     len_cam1 = len(image_cam1)
     len_cam2 = len(image_cam2)
     actualSampleSeqLen = sampleSeqLength
-    startA = int(random.random()* ((len_cam1 - actualSampleSeqLen) + 1)) + 1    
-    startB = int(random.random()* ((len_cam2 - actualSampleSeqLen) + 1)) + 1
+    startA = int(random.random()* ((len_cam1 - actualSampleSeqLen) + 1))    
+    startB = int(random.random()* ((len_cam2 - actualSampleSeqLen) + 1)) 
     # print startA,startB
     netInputA = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
     netInputB = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
@@ -107,6 +107,7 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     	optical = cv2.resize(optical,(40,56))
     	netInputB[:, :, 3, m] = optical[:,:,0]
     	netInputB[:, :, 4, m] = optical[:,:,1]
+
     netInputA = np.transpose(netInputA, (3,2,0,1))
     netInputA = np.transpose(netInputB, (3,2,0,1))
     return netInputA,netInputB
@@ -123,8 +124,15 @@ if __name__ == '__main__':
 		trainID.append(IDs[i])
 	else:
 		testID.append(IDs[i])
-    print trainID
-    netInputA,netInputB = different_pair(trainID,16)
+    # print trainID
+    for batch_n in range(len(trainID)*2):
+        if (batch_n%2 == 0): 
+            # load data from same identity
+            netInputA, netInputB = same_pair(trainID[batch_n/2],16) 
+        else:
+            # load data from different identity random
+            netInputA, netInputB = different_pair(trainID,16)
+    # netInputA,netInputB = different_pair(trainID,16)
     
 
 
