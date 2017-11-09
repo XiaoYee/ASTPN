@@ -6,8 +6,8 @@ import cv2
 
 # sampleSeqLength = 16
 this_dir = osp.dirname(__file__)
-person_sequence = osp.join(this_dir, "data", "i-LIDS-VID", "sequences")
-optical_sequence = osp.join(this_dir, "data", "i-LIDS-VID-OF-HVP", "sequences")
+person_sequence = osp.join(this_dir, "..", "data", "i-LIDS-VID", "sequences")
+optical_sequence = osp.join(this_dir, "..", "data", "i-LIDS-VID-OF-HVP", "sequences")
 
 
 
