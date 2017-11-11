@@ -3,6 +3,7 @@ import os.path as osp
 import random
 import numpy as np
 import cv2
+import torch
 
 # sampleSeqLength = 16
 this_dir = osp.dirname(__file__)
@@ -12,11 +13,12 @@ optical_sequence = osp.join(this_dir, "..", "data", "i-LIDS-VID-OF-HVP", "sequen
 
 
 def same_pair(batch_number, sampleSeqLength, is_train=True):
-	# print batch_number
+
     image_cam1 = os.listdir(osp.join(person_sequence,"cam1",str(batch_number)))
     optical_cam1 = os.listdir(osp.join(optical_sequence,"cam1",str(batch_number)))
     image_cam2 = os.listdir(osp.join(person_sequence,"cam2",str(batch_number)))
     optical_cam2 = os.listdir(osp.join(optical_sequence,"cam2",str(batch_number)))
+    # print batch_number
     image_cam1.sort()
     image_cam2.sort()
     optical_cam1.sort()
@@ -29,6 +31,8 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
     # print startA,startB
     netInputA = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
     netInputB = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
+
+
     for m in range(actualSampleSeqLen):
     	img_file = os.path.join(person_sequence,"cam1",str(batch_number),image_cam1[startA+m])
     	img = cv2.imread(img_file)
@@ -54,18 +58,25 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
     	optical = cv2.resize(optical,(40,56))
     	netInputB[:, :, 3, m] = optical[:,:,0]
     	netInputB[:, :, 4, m] = optical[:,:,1]
+
     netInputA = np.transpose(netInputA, (3,2,0,1))
-    netInputA = np.transpose(netInputB, (3,2,0,1))
-    return netInputA,netInputB
+    netInputB = np.transpose(netInputB, (3,2,0,1))
+    # labelA = getLabel(batch_number)
+    # labelB = getLabel(batch_number)
+    # label_same = np.zeros(1, dtype=np.uint8)
+    # label_same[0] = 1
+    # label_same = torch.from_numpy(label_same)
+    label_same = 1
+    return netInputA,netInputB,label_same
 
 
 def different_pair(trainID, sampleSeqLength, is_train=True):
 	
     # trainID_random = random.shuffle(trainID)
-    train_probe ,train_gallery = random.sample(range(150), 2)
+    train_probe_num ,train_gallery_num = random.sample(range(150), 2)
     # print train_probe
-    train_probe = trainID[train_probe]
-    train_gallery = trainID[train_gallery]
+    train_probe = trainID[train_probe_num]
+    train_gallery = trainID[train_gallery_num]
     image_cam1 = os.listdir(osp.join(person_sequence,"cam1",str(train_probe)))
     optical_cam1 = os.listdir(osp.join(optical_sequence,"cam1",str(train_probe)))
     image_cam2 = os.listdir(osp.join(person_sequence,"cam2",str(train_gallery)))
@@ -82,6 +93,9 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     # print startA,startB
     netInputA = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
     netInputB = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
+    labelA = np.zeros(sampleSeqLength, dtype=np.uint8)
+    labelB = np.zeros(sampleSeqLength, dtype=np.uint8)
+
     for m in range(actualSampleSeqLen):
     	img_file = os.path.join(person_sequence,"cam1",str(train_probe),image_cam1[startA+m])
     	img = cv2.imread(img_file)
@@ -94,6 +108,7 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     	optical = cv2.resize(optical,(40,56))
     	netInputA[:, :, 3, m] = optical[:,:,0]
     	netInputA[:, :, 4, m] = optical[:,:,1]
+        labelA[m] = train_probe_num
 
     for m in range(actualSampleSeqLen):
     	img_file = os.path.join(person_sequence,"cam2",str(train_gallery),image_cam2[startB+m])
@@ -107,10 +122,25 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     	optical = cv2.resize(optical,(40,56))
     	netInputB[:, :, 3, m] = optical[:,:,0]
     	netInputB[:, :, 4, m] = optical[:,:,1]
+        labelB[m] = train_gallery_num
 
     netInputA = np.transpose(netInputA, (3,2,0,1))
-    netInputA = np.transpose(netInputB, (3,2,0,1))
-    return netInputA,netInputB
+    netInputB = np.transpose(netInputB, (3,2,0,1))
+    labelA = torch.from_numpy(labelA)
+    labelB = torch.from_numpy(labelB)
+
+    # labelA = getLabel(train_probe)
+    # labelB = getLabel(train_gallery)
+
+    # label_same = np.zeros(1, dtype=np.uint8)
+    # label_same[0] = -1
+    # label_same = torch.from_numpy(label_same)
+    label_same = -1
+    return netInputA,netInputB,labelA,labelB,label_same
+
+def getLabel(batch_number):
+    #split person...
+    return int(batch_number.split('n')[1])
 
 
 if __name__ == '__main__':
