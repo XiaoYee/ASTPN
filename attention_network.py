@@ -9,7 +9,7 @@ import math
 class MetrixMultiply(nn.Module):
     def __init__(self):
         super(MetrixMultiply, self).__init__()
-        self.weight = nn.Parameter(torch.zeros(128,128))
+        self.weight = nn.Parameter(torch.Tensor(128, 128).uniform_(-1/128, 1/128),requires_grad = True)
 
     # reference:https://discuss.pytorch.org/t/how-to-define-a-new-layer-with-autograd/351
     def forward(self, x):
@@ -48,7 +48,8 @@ class AttentionNet(nn.Module):
         # Siamese Architecture
         self.cnn = nn.Sequential(
             nn.ZeroPad2d((4,4,4,4)),
-            nn.Conv2d(5, 16, 5,stride=1, padding=1),
+            ## only use rgb
+            nn.Conv2d(3, 16, 5, stride=1, padding=1),
             nn.Tanh(),
             nn.MaxPool2d(2,stride=2),
             nn.ZeroPad2d((4,4,4,4)),
@@ -80,6 +81,10 @@ class AttentionNet(nn.Module):
         y, hn = self.rnn(y, self.h_0)
         P = x.squeeze(0)
         G = y.squeeze(0)
+
+
+
+        ######## for debug keep attention away first##############
         #attention begin
         A = self.Metrix(P)
         A = F.tanh(A.mm(torch.t(G)))
@@ -94,14 +99,23 @@ class AttentionNet(nn.Module):
         # print a_p.size()
         v_p = a_p.mm(P)
         v_g = a_g.mm(G)
-        f_p = self.fc(v_p)
-        f_g = self.fc(v_g)
+        ###########################################################
         # logsoft = nn.LogSoftmax()
         # loss_p = logsoft(v_p)
         # loss_g = logsoft(v_g)
         # use softmax and cross-entropy loss as paper
-        identity_p = soft(f_p)
-        identity_g = soft(f_g)
+        
+        #####we should not use Softmax here
+        # soft = nn.Softmax()
+        # identity_p = soft(f_p)
+        # identity_g = soft(f_g)
+        #####  change to LogSoftMax and NLLLoss ######
+        # v_p = torch.mean(P,0,True)
+        # v_g = torch.mean(G,0,True)
+        f_p = self.fc(v_p)
+        f_g = self.fc(v_g)
+        identity_p = f_p
+        identity_g = f_g
 
         pdist = nn.PairwiseDistance(p=2)
         distance = pdist(v_p, v_g)
