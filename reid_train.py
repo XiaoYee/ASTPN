@@ -16,7 +16,7 @@ from dataset import same_pair,different_pair
 
     
 nEpochs = 600
-learning_rate = 0.001
+# learning_rate = 0.001
 sampleSeqLength = 16
 
 this_dir = osp.dirname(__file__)
@@ -31,6 +31,7 @@ loss_identity = nn.CrossEntropyLoss()
 
 #choose trainIDs split=0.5
 IDs = os.listdir(osp.join(person_sequence,"cam1"))
+# print IDs
 # print len(IDs) 300
 trainID = []
 testID  = []
@@ -43,11 +44,17 @@ for i in range(300):
 nTrainPersons = len(trainID)
 torch.manual_seed(1)
 
-optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+# optimizer = optim.RMSprop(model.parameters(), lr=0.001, alpha=0.9)
+
+
+# for parameter in model.parameters():
+#     print(parameter)
 
 loss_log = []
 for ep in range(nEpochs):
     # random every epoch
+    loss_add = 0
     order = torch.randperm(nTrainPersons)
     for i in range(nTrainPersons*2):
         # print i
@@ -61,6 +68,8 @@ for ep in range(nEpochs):
                 labelB[m] = order[i/2]
             labelA = torch.from_numpy(labelA)
             labelB = torch.from_numpy(labelB)
+            # print labelA
+            # print trainID[order[i/2]]
         else:
 	        # load data from different identity random
 	        netInputA, netInputB, labelA, labelB ,label_same = different_pair(trainID,sampleSeqLength)
@@ -91,7 +100,7 @@ for ep in range(nEpochs):
 
         loss = loss_pair+loss_identity1+loss_identity2
         # loss = loss_pair
-
+        loss_add = loss_add + loss.data[0]
         # print loss
         # Euclidean_distance = (torch.mean(torch.pow((v_p-v_g),2))*(v_p.size()[0])).data.cpu()
         # zero = torch.FloatTensor([0])
@@ -102,12 +111,15 @@ for ep in range(nEpochs):
 
         if i%10 == 0:
             loss_log.append(loss.data[0])
-            print('\nepoch: {} - batch: {}/{}'.format(ep, i, len(trainID)*2))
-            print('loss: ', loss.data[0])
+            # print('\nepoch: {} - batch: {}/{}'.format(ep, i, len(trainID)*2))
+            # print('loss: ', loss.data[0])
 
         # loss = nn.Parameter(loss)
         loss.backward() 
         optimizer.step()
+
+    if ep%1 ==0:
+        print('loss: ', loss_add)
 
 # print loss_log
         
