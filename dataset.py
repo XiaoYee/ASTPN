@@ -4,13 +4,15 @@ import random
 import numpy as np
 import cv2
 import torch
+import matplotlib.pyplot as plt
 
 # sampleSeqLength = 16
 this_dir = osp.dirname(__file__)
 person_sequence = osp.join(this_dir, "..", "data", "i-LIDS-VID", "sequences")
 optical_sequence = osp.join(this_dir, "..", "data", "i-LIDS-VID-OF-HVP", "sequences")
 
-
+im_mean = [124, 117, 104]
+im_std = [0.229, 0.224, 0.225]
 
 def same_pair(batch_number, sampleSeqLength, is_train=True):
 
@@ -49,8 +51,8 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
         v1  = np.sqrt(np.var(img[:,:,1])) 
         v2  = np.sqrt(np.var(img[:,:,2])) 
     	netInputA[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
-    	netInputA[:, :, 1, m] = (img[:,:,1]-m0)/np.sqrt(v1)
-    	netInputA[:, :, 2, m] = (img[:,:,2]-m0)/np.sqrt(v2)
+    	netInputA[:, :, 1, m] = (img[:,:,1]-m1)/np.sqrt(v1)
+    	netInputA[:, :, 2, m] = (img[:,:,2]-m2)/np.sqrt(v2)
     	# optical_file = os.path.join(optical_sequence,"cam1",str(batch_number),optical_cam1[startA+m])
     	# optical = cv2.imread(optical_file)
     	# optical = cv2.resize(optical,(40,56))
@@ -72,9 +74,9 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
         v0  = np.sqrt(np.var(img[:,:,0]))
         v1  = np.sqrt(np.var(img[:,:,1])) 
         v2  = np.sqrt(np.var(img[:,:,2])) 
-        netInputA[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
-        netInputA[:, :, 1, m] = (img[:,:,1]-m0)/np.sqrt(v1)
-        netInputA[:, :, 2, m] = (img[:,:,2]-m0)/np.sqrt(v2)
+        netInputB[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
+        netInputB[:, :, 1, m] = (img[:,:,1]-m1)/np.sqrt(v1)
+        netInputB[:, :, 2, m] = (img[:,:,2]-m2)/np.sqrt(v2)
     	# optical_file = os.path.join(optical_sequence,"cam2",str(batch_number),optical_cam2[startB+m])
     	# optical = cv2.imread(optical_file)
     	# optical = cv2.resize(optical,(40,56))
@@ -121,8 +123,8 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
     # netInputB = np.zeros((56, 40, 5, actualSampleSeqLen), dtype=np.float32)
     netInputA = np.zeros((56, 40, 3, actualSampleSeqLen), dtype=np.float32)
     netInputB = np.zeros((56, 40, 3, actualSampleSeqLen), dtype=np.float32)
-    labelA = np.zeros(sampleSeqLength, dtype=np.uint8)
-    labelB = np.zeros(sampleSeqLength, dtype=np.uint8)
+    # labelA = np.zeros(sampleSeqLength, dtype=np.uint8)
+    # labelB = np.zeros(sampleSeqLength, dtype=np.uint8)
 
     for m in range(actualSampleSeqLen):
     	img_file = os.path.join(person_sequence,"cam1",str(train_probe),image_cam1[startA+m])
@@ -136,8 +138,8 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
         v1  = np.sqrt(np.var(img[:,:,1])) 
         v2  = np.sqrt(np.var(img[:,:,2])) 
         netInputA[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
-        netInputA[:, :, 1, m] = (img[:,:,1]-m0)/np.sqrt(v1)
-        netInputA[:, :, 2, m] = (img[:,:,2]-m0)/np.sqrt(v2)
+        netInputA[:, :, 1, m] = (img[:,:,1]-m1)/np.sqrt(v1)
+        netInputA[:, :, 2, m] = (img[:,:,2]-m2)/np.sqrt(v2)
     	# optical_file = os.path.join(optical_sequence,"cam1",str(train_probe),optical_cam1[startA+m])
     	# optical = cv2.imread(optical_file)
     	# optical = cv2.resize(optical,(40,56))
@@ -147,7 +149,7 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
      #    v4  = np.sqrt(np.var(optical[:,:,1])) 
      #    netInputA[:, :, 3, m] = (optical[:,:,0]-m3)/np.sqrt(v3)
      #    netInputA[:, :, 4, m] = (optical[:,:,1]-m4)/np.sqrt(v4)
-        labelA[m] = train_probe_num
+        # labelA[m] = train_probe_num
 
     for m in range(actualSampleSeqLen):
     	img_file = os.path.join(person_sequence,"cam2",str(train_gallery),image_cam2[startB+m])
@@ -160,9 +162,9 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
         v0  = np.sqrt(np.var(img[:,:,0]))
         v1  = np.sqrt(np.var(img[:,:,1])) 
         v2  = np.sqrt(np.var(img[:,:,2])) 
-        netInputA[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
-        netInputA[:, :, 1, m] = (img[:,:,1]-m0)/np.sqrt(v1)
-        netInputA[:, :, 2, m] = (img[:,:,2]-m0)/np.sqrt(v2)
+        netInputB[:, :, 0, m] = (img[:,:,0]-m0)/np.sqrt(v0)
+        netInputB[:, :, 1, m] = (img[:,:,1]-m1)/np.sqrt(v1)
+        netInputB[:, :, 2, m] = (img[:,:,2]-m2)/np.sqrt(v2)
     	# optical_file = os.path.join(optical_sequence,"cam2",str(train_gallery),optical_cam2[startB+m])
     	# optical = cv2.imread(optical_file)
     	# optical = cv2.resize(optical,(40,56))
@@ -172,12 +174,15 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
      #    v4  = np.sqrt(np.var(optical[:,:,1])) 
      #    netInputA[:, :, 3, m] = (optical[:,:,0]-m3)/np.sqrt(v3)
      #    netInputA[:, :, 4, m] = (optical[:,:,1]-m4)/np.sqrt(v4)
-        labelB[m] = train_gallery_num
+        # labelB[m] = train_gallery_num
 
     netInputA = np.transpose(netInputA, (3,2,0,1))
     netInputB = np.transpose(netInputB, (3,2,0,1))
-    labelA = torch.from_numpy(labelA)
-    labelB = torch.from_numpy(labelB)
+    # labelA = torch.from_numpy(labelA)
+    # labelB = torch.from_numpy(labelB)
+    labelA = train_probe_num
+    labelB = train_gallery_num
+
 
     # labelA = getLabel(train_probe)
     # labelB = getLabel(train_gallery)
