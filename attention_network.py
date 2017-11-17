@@ -49,26 +49,45 @@ class AttentionNet(nn.Module):
         self.cnn = nn.Sequential(
             nn.ZeroPad2d((4,4,4,4)),
             ## only use rgb
-            nn.Conv2d(3, 16, 5, stride=1, padding=1),
+            nn.Conv2d(3, 16, kernel_size = 5,stride=1, padding=1),
+            ## now add more batchNorm for quick fit,but not 
+            # nn.BatchNorm2d(16,momentum=0.5),
             nn.Tanh(),
             nn.MaxPool2d(2,stride=2),
             nn.ZeroPad2d((4,4,4,4)),
-            nn.Conv2d(16, 32, 5,stride=1, padding=1),
+            nn.Conv2d(16, 32, kernel_size = 5,stride=1, padding=1),
+            # nn.BatchNorm2d(32,momentum=0.5),
             nn.Tanh(),
             nn.MaxPool2d(2, stride=2),
             nn.ZeroPad2d((4,4,4,4)),
-            nn.Conv2d(32, 32, 5,stride=1, padding=1),
+            nn.Conv2d(32, 32, kernel_size = 5,stride=1, padding=1),
+            # nn.BatchNorm2d(32,momentum=0.5),
             nn.Tanh(),
             nn.ZeroPad2d((2,2,0,0)),
             SPPLayer(4),
             nn.Dropout(0.6),
-            nn.Linear(32*(64+16+4+1), 128)
+            nn.Linear(32*(64+16+4+1), 128),
+            # nn.BatchNorm1d(128,momentum=0.5)
             )
         # batch_first=True,then the input is provided as (batch,sequence,feature)
         self.rnn = nn.RNN(128,128,batch_first=True,dropout=0.6)
-        self.h_0 = Variable(torch.randn(1, 1, 128).cuda())
+        self.h_0 = nn.init.orthogonal(Variable(torch.randn(1, 1, 128).cuda()))
         self.Metrix = MetrixMultiply()
         self.fc = nn.Linear(128, 150)
+
+        # set parameters for network
+        self.fc.weight.data.normal_(0, 0.001)
+        self.fc.bias.data.zero_()
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+        
+
 
 
     def forward(self,x,y):
@@ -82,14 +101,12 @@ class AttentionNet(nn.Module):
         P = x.squeeze(0)
         G = y.squeeze(0)
 
-
-
         ######## for debug keep attention away first##############
         #attention begin
         A = self.Metrix(P)
         A = F.tanh(A.mm(torch.t(G)))
-        t_p,indx = torch.max(A,0)
-        t_g,indx = torch.max(A,1)
+        t_p,indx = torch.max(A,1)
+        t_g,indx = torch.max(A,0)
         # notice don't view as (16,1),otherwise soft will be all 1
         t_p = t_p.view(1,16)
         t_g = t_g.view(1,16)
@@ -105,7 +122,7 @@ class AttentionNet(nn.Module):
         # loss_g = logsoft(v_g)
         # use softmax and cross-entropy loss as paper
         
-        #####we should not use Softmax here
+        ##### we should not use Softmax here
         # soft = nn.Softmax()
         # identity_p = soft(f_p)
         # identity_g = soft(f_g)
