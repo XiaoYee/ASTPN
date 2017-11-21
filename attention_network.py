@@ -49,7 +49,7 @@ class AttentionNet(nn.Module):
         self.cnn = nn.Sequential(
             nn.ZeroPad2d((4,4,4,4)),
             ## only use rgb
-            nn.Conv2d(3, 16, kernel_size = 5,stride=1, padding=1),
+            nn.Conv2d(5, 16, kernel_size = 5,stride=1, padding=1),
             ## now add more batchNorm for quick fit,but not 
             # nn.BatchNorm2d(16,momentum=0.5),
             nn.Tanh(),
@@ -86,8 +86,6 @@ class AttentionNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-        
-
 
 
     def forward(self,x,y):
@@ -108,8 +106,8 @@ class AttentionNet(nn.Module):
         t_p,indx = torch.max(A,1)
         t_g,indx = torch.max(A,0)
         # notice don't view as (16,1),otherwise soft will be all 1
-        t_p = t_p.view(1,16)
-        t_g = t_g.view(1,16)
+        t_p = t_p.view(1,-1)
+        t_g = t_g.view(1,-1)
         soft = nn.Softmax()
         a_p = soft(t_p)
         a_g = soft(t_g)
@@ -137,7 +135,7 @@ class AttentionNet(nn.Module):
         pdist = nn.PairwiseDistance(p=2)
         distance = pdist(v_p, v_g)
 
-    	return distance,identity_p,identity_g
+    	return distance,identity_p,identity_g,v_p,v_g
 
 
 
