@@ -6,6 +6,11 @@ from torch.autograd import Variable
 import math
 
 
+def clip_grad(v, min, max):
+    v.register_hook(lambda g: g.clamp(min, max))
+    return v
+
+
 class MetrixMultiply(nn.Module):
     def __init__(self):
         super(MetrixMultiply, self).__init__()
@@ -96,9 +101,12 @@ class AttentionNet(nn.Module):
         y = y.view(1,-1,128)
     	x, hn = self.rnn(x, self.h_0)
         y, hn = self.rnn(y, self.h_0)
+        #####clamp gradient######################################
+        x = clip_grad(x, -5, 5)
+        y = clip_grad(y, -5, 5)
+        #########################################################
         P = x.squeeze(0)
         G = y.squeeze(0)
-
         ######## for debug keep attention away first##############
         #attention begin
         A = self.Metrix(P)

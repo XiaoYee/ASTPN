@@ -132,8 +132,8 @@ def getTest_pair(testID,train_probe_num,train_gallery_num,sampleSeqLength):
         m4  = np.mean(optical[:,:,2])
         v3  = np.sqrt(np.var(optical[:,:,1])) 
         v4  = np.sqrt(np.var(optical[:,:,2])) 
-        netInputA[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
-        netInputA[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
+        netInputB[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
+        netInputB[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
 
     netInputA = np.transpose(netInputA, (3,2,0,1))
     netInputB = np.transpose(netInputB, (3,2,0,1))

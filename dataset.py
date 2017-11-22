@@ -93,8 +93,8 @@ def same_pair(batch_number, sampleSeqLength, is_train=True):
         m4  = np.mean(optical[:,:,2])
         v3  = np.sqrt(np.var(optical[:,:,1])) 
         v4  = np.sqrt(np.var(optical[:,:,2])) 
-        netInputA[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
-        netInputA[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
+        netInputB[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
+        netInputB[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
 
     netInputA = np.transpose(netInputA, (3,2,0,1))
     netInputB = np.transpose(netInputB, (3,2,0,1))
@@ -185,8 +185,8 @@ def different_pair(trainID, sampleSeqLength, is_train=True):
         m4  = np.mean(optical[:,:,2])
         v3  = np.sqrt(np.var(optical[:,:,1])) 
         v4  = np.sqrt(np.var(optical[:,:,2])) 
-        netInputA[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
-        netInputA[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
+        netInputB[:, :, 3, m] = (optical[:,:,1]-m3)/np.sqrt(v3)
+        netInputB[:, :, 4, m] = (optical[:,:,2]-m4)/np.sqrt(v4)
 
 
     netInputA = np.transpose(netInputA, (3,2,0,1))
@@ -229,10 +229,10 @@ if __name__ == '__main__':
     for batch_n in range(len(trainID)*2):
         if (batch_n%2 == 0): 
             # load data from same identity
-            netInputA, netInputB = same_pair(trainID[batch_n/2],16) 
+            netInputA, netInputB,label_same = same_pair(trainID[batch_n/2],16) 
         else:
             # load data from different identity random
-            netInputA, netInputB = different_pair(trainID,16)
+            netInputA, netInputB,labelA,labelB,label_same = different_pair(trainID,16)
     # netInputA,netInputB = different_pair(trainID,16)
     
 
