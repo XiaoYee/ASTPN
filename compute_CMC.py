@@ -21,14 +21,14 @@ def computeCMC(testID,model):
             netInputA,netInputB = getTest_pair(testID,i,j,128)
             for crpx in range(1,9):
                 for flip in range(1,3):
-                    netInputA = doDataAug(netInputA,crpx,crpx,flip)
-                    netInputB = doDataAug(netInputB,crpx,crpx,flip)
+                    netInputA_crop = doDataAug(netInputA,crpx,crpx,flip)
+                    netInputB_crop = doDataAug(netInputB,crpx,crpx,flip)
 
-                    netInputA = Variable(torch.from_numpy(netInputA.copy()).float()).cuda()
-                    netInputB = Variable(torch.from_numpy(netInputB.copy()).float()).cuda()
+                    netInputA_crop = Variable(torch.from_numpy(netInputA_crop.copy()).float()).cuda()
+                    netInputB_crop = Variable(torch.from_numpy(netInputB_crop.copy()).float()).cuda()
 
-                    distanceA,identity_pA,identity_gA,v_pA,v_gA = model(netInputA,netInputA)
-                    distanceB,identity_pB,identity_gB,v_pB,v_gB = model(netInputB,netInputB)
+                    distanceA,identity_pA,identity_gA,v_pA,v_gA = model(netInputA_crop,netInputA_crop)
+                    distanceB,identity_pB,identity_gB,v_pB,v_gB = model(netInputB_crop,netInputB_crop)
                     #only use v_pA,v_pB for compute
                     v_pA = v_pA.data
                     v_pB = v_pB.data
@@ -115,7 +115,7 @@ def getTest_pair(testID,train_probe_num,train_gallery_num,sampleSeqLength):
         img_file = os.path.join(person_sequence,"cam2",str(test_gallery),image_cam2[startB+m])
         img = cv2.imread(img_file)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-        img = cv2.resize(img,(40,56))
+        img = cv2.resize(img,(48,64))
         m0  = np.mean(img[:,:,0]) 
         m1  = np.mean(img[:,:,1])
         m2  = np.mean(img[:,:,2])
