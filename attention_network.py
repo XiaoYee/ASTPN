@@ -54,7 +54,7 @@ class AttentionNet(nn.Module):
         self.cnn = nn.Sequential(
             nn.ZeroPad2d((4,4,4,4)),
             ## only use rgb
-            nn.Conv2d(5, 16, kernel_size = 5,stride=1, padding=1),
+            nn.Conv2d(3, 16, kernel_size = 5,stride=1, padding=1),
             ## now add more batchNorm for quick fit,but not 
             # nn.BatchNorm2d(16,momentum=0.5),
             nn.Tanh(),
@@ -102,8 +102,8 @@ class AttentionNet(nn.Module):
     	x, hn = self.rnn(x, self.h_0)
         y, hn = self.rnn(y, self.h_0)
         #####clamp gradient######################################
-        x = clip_grad(x, -5, 5)
-        y = clip_grad(y, -5, 5)
+        # x = clip_grad(x, -5, 5)
+        # y = clip_grad(y, -5, 5)
         #########################################################
         P = x.squeeze(0)
         G = y.squeeze(0)
@@ -114,8 +114,8 @@ class AttentionNet(nn.Module):
         t_p,indx = torch.max(A,1)
         t_g,indx = torch.max(A,0)
         # notice don't view as (16,1),otherwise soft will be all 1
-        t_p = t_p.view(1,-1)
-        t_g = t_g.view(1,-1)
+        t_p = t_p.view(1,16)
+        t_g = t_g.view(1,16)
         soft = nn.Softmax()
         a_p = soft(t_p)
         a_g = soft(t_g)

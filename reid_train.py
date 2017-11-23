@@ -16,7 +16,7 @@ import cv2
 from dataset import same_pair,different_pair 
 
     
-nEpochs = 600
+nEpochs = 1200
 learning_rate = 0.001
 sampleSeqLength = 16
 
@@ -50,8 +50,8 @@ for i in range(300):
 nTrainPersons = len(trainID)
 torch.manual_seed(1)
 
-optimizer = optim.SGD(model.parameters(), lr= learning_rate, momentum=0.9)
-# optimizer = optim.RMSprop(model.parameters(), lr=0.001, alpha=0.9)
+# optimizer = optim.SGD(model.parameters(), lr= learning_rate, momentum=0.9)
+optimizer = optim.RMSprop(model.parameters(), lr=0.001, alpha=0.9)
 
 def adjust_learning_rate(optimizer, batch):
 
@@ -73,7 +73,7 @@ loss_log = []
 
 for ep in range(nEpochs):
     # random every epoch
-    model.train()
+    # model.train()
     loss_add = 0
     order = torch.randperm(nTrainPersons)
     for i in range(nTrainPersons*2):
@@ -91,8 +91,11 @@ for ep in range(nEpochs):
 	        # load data from different identity random
 	        netInputA, netInputB, labelA, labelB ,label_same = different_pair(trainID,sampleSeqLength)
 
-        netInputA = Variable(torch.from_numpy(netInputA.copy()).float()).cuda()
-        netInputB = Variable(torch.from_numpy(netInputB.copy()).float()).cuda()
+        # netInputA = Variable(torch.from_numpy(netInputA.copy()).float()).cuda()
+        # netInputB = Variable(torch.from_numpy(netInputB.copy()).float()).cuda()
+
+        netInputA = Variable(torch.from_numpy(netInputA).float()).cuda()
+        netInputB = Variable(torch.from_numpy(netInputB).float()).cuda()
 
         # optimizer.zero_grad()
 		# v_p,v_g,identity_p,identity_g = model(netInputA,netInputB)
@@ -117,12 +120,9 @@ for ep in range(nEpochs):
         loss_add = loss_add + loss.data[0]
 
         #### clip gradient parameters to train RNN #####
-
-        # nn.utils.clip_grad_norm(model.parameters(), 5)
         for p in model.parameters():
             if p.grad is not None:
                 p.grad.data.clamp_(-5, 5)
-        # torch.nn.utils.clip_grad_norm(model.parameters(),5)
         ##############################################
         optimizer.zero_grad()
         loss.backward() 
@@ -133,17 +133,11 @@ for ep in range(nEpochs):
         print('epoch %d, loss %f ' % (ep , loss_add))
         loss_log.append(loss_add)
 
-    if (ep+1)%500 == 0:
+    # if (ep+1)%300 == 0:
 
-        model.eval()
-        cmc = computeCMC(testID, model)
-        print cmc
-
-    if (ep+1)%600 == 0:
-
-        model.eval()
-        cmc = computeCMC(testID, model)
-        print cmc
+        # model.eval()
+        # cmc = computeCMC(testID, model)
+        # print cmc
 
         
 torch.save(model.state_dict(), './siamese.pth')
